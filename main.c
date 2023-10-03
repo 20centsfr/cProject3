@@ -54,7 +54,7 @@ int main(int argc, char** argv){
     printf("#+#    #+#              #+#     #+# #+# #+#     #+# #+#       #+#    #+# #+#    #+# #+#    #+# #+#\n");
     printf(" ########               ###     ### ### ###     ### ########## ########   ########   ########  ##########\n");
 
-    printf("\n a - Add a new IP address\n l - List IP addresses\n s - Search similar by mask\n d - Delete an IP\n q - quit\n");
+    printf("\n a    a- Add a new IP address\n l - List IP addresses\n s - Search similar by mask\n d - Delete an IP\n q - quit\n");
     choice = getchar();
 
     switch (choice)
