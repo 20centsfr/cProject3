@@ -30,7 +30,7 @@ void addIp(){
 
     FILE *file = fopen("ipList.txt", "a+");
     if (file == NULL) {
-        perror("Impossible d'ouvrir/creer le fichier ipList.txt");
+        printf("Impossible d'ouvrir/creer le fichier ipList.txt");
         return;
     }
 
@@ -56,6 +56,7 @@ int main(int argc, char** argv){
 
     printf("\n a - Add a new IP address\n l - List IP addresses\n s - Search similar by mask\n d - Delete an IP\n q - quit\n");
     choice = getchar();
+    fflush(stdin);
 
     switch (choice)
     {
