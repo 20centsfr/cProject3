@@ -5,6 +5,7 @@
 void clearInputBuffer();
 int verifIp(char *ip);
 void addIp();
+void ipToBinary(int n);
 void listIp(char **ipArray, int count);
 char** readIp(int* count);
 void freeIpArray(char** ipArray, int ipCount);
@@ -13,27 +14,6 @@ int main(int argc, char** argv);
 void clearInputBuffer() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
-}
-
-int decimalToBinary(int n) {
-    if (n == 0)
-        return 0;
-
-    int binary[32];
-    int reverse;
-    int i = 0;
-
-    while (n > 0) {
-        binary[i] = n % 2;
-        n = n / 2;
-        i++;
-    }
-
-    for (int j = i - 3; j >= 0; j--) {
-        reverse *= 10;
-        reverse += binary[j];
-    }
-    return reverse;
 }
 
 int verifIp(char *ip){
