@@ -5,7 +5,9 @@
 void clearInputBuffer();
 int verifIp(char *ip);
 void addIp();
-void listIp();
+void listIp(char **ipArray, int count);
+char** readIp(int* count);
+void freeIpArray(char** ipArray, int ipCount);
 int main(int argc, char** argv);
 
 void clearInputBuffer() {
@@ -33,6 +35,7 @@ void addIp(){
 
     printf("Entrez un ip valide :\n");
     scanf("%19s", ip);
+    clearInputBuffer();
 
     if (!verifIp(ip)) {
         printf("Adresse IP non valide : %s\n", ip);
@@ -52,17 +55,25 @@ void addIp(){
     fclose(file);
 }
 
-void listIp() {
-    FILE *file = fopen("ipList.txt", "r");
+void listIp(char **ipArray, int count){
+
+    for(int i = 0; i < count; i++){
+        printf("%d : %s\n", i + 1, ipArray[i]);
+    }
+
+}
+
+char** readIp(int *count) {
+    FILE* file = fopen("ipList.txt", "r");
     if (file == NULL) {
         printf("Impossible d'ouvrir le fichier ipList.txt\n");
-        return;
+        return NULL;
     }
 
     char line[20];
-    int count = 0;
+    int ipCount = 0;
 
-    printf("Addresses found:\n");
+    char** ipArray = NULL;
 
     while (fgets(line, sizeof(line), file) != NULL) {
         size_t len = strlen(line);
@@ -71,57 +82,81 @@ void listIp() {
         }
 
         if (verifIp(line)) {
-            count++;
-            printf("%d- %s\n", count, line);
+            ipArray = (char**)realloc(ipArray, (ipCount + 1) * sizeof(char*));
+            if (ipArray == NULL) {
+                printf("Erreur lors de l'allocation mémoire");
+                exit(1);
+            }
+
+            ipArray[ipCount] = (char*)malloc(strlen(line) + 1);
+            if (ipArray[ipCount] == NULL) {
+                printf("Erreur lors de l'allocation mémoire");
+                exit(1);
+            }
+
+            strcpy(ipArray[ipCount], line);
+            ipCount++;
         }
     }
 
     fclose(file);
 
-    if (count == 0) {
-        printf("No valid IP addresses found.\n");
-    } else {
-        printf("%d address%s found.\n", count, count > 1 ? "es" : "");
+    *count = ipCount;
+    return ipArray;
+}
+
+
+void freeIpArray(char** ipArray, int ipCount) {
+    for (int i = 0; i < ipCount; i++) {
+        free(ipArray[i]);
     }
+    free(ipArray);
 }
 
 int main(int argc, char** argv){
     char choice;
+    char** ipArray = NULL;
+    int ipCount = 0;
 
     do{
 
-    printf(" ::::::::                   ::: ::::::::::: :::     :::        ::::::::   ::::::::  :::    ::: ::::::::::\n");
-    printf(":+:    :+:                :+: :+:   :+:   :+: :+:   :+:       :+:    :+: :+:    :+: :+:    :+: :+:\n");
-    printf("+:+                      +:+   +:+  +:+  +:+   +:+  +:+       +:+    +:+ +:+        +:+    +:+ +:+\n");
-    printf("+#+       +#++:++#++:++ +#++:++#++: +#+ +#++:++#++: +#+       +#+    +:+ :#:        +#+    +:+ +#++:++#\n");
-    printf("+#+                     +#+     +#+ +#+ +#+     +#+ +#+       +#+    +#+ +#+   +#+# +#+    +#+ +#+\n");
-    printf("#+#    #+#              #+#     #+# #+# #+#     #+# #+#       #+#    #+# #+#    #+# #+#    #+# #+#\n");
-    printf(" ########               ###     ### ### ###     ### ########## ########   ########   ########  ##########\n");
+        printf(" ::::::::                   ::: ::::::::::: :::     :::        ::::::::   ::::::::  :::    ::: ::::::::::\n");
+        printf(":+:    :+:                :+: :+:   :+:   :+: :+:   :+:       :+:    :+: :+:    :+: :+:    :+: :+:\n");
+        printf("+:+                      +:+   +:+  +:+  +:+   +:+  +:+       +:+    +:+ +:+        +:+    +:+ +:+\n");
+        printf("+#+       +#++:++#++:++ +#++:++#++: +#+ +#++:++#++: +#+       +#+    +:+ :#:        +#+    +:+ +#++:++#\n");
+        printf("+#+                     +#+     +#+ +#+ +#+     +#+ +#+       +#+    +#+ +#+   +#+# +#+    +#+ +#+\n");
+        printf("#+#    #+#              #+#     #+# #+# #+#     #+# #+#       #+#    #+# #+#    #+# #+#    #+# #+#\n");
+        printf(" ########               ###     ### ### ###     ### ########## ########   ########   ########  ##########\n");
 
-    printf("\n a - Add a new IP address\n l - List IP addresses\n s - Search similar by mask\n d - Delete an IP\n q - quit\n");
-    choice = getchar();
-    clearInputBuffer();
+        printf("\n a - Add a new IP address\n l - List IP addresses\n s - Search similar by mask\n d - Delete an IP\n q - quit\n");
+        choice = getchar();
+        clearInputBuffer();
 
-    switch (choice)
-    {
-    case 'a':
-        addIp();
-        break;
-    
-    case 'l':
-        listIp();
-        break;
+        switch (choice)
+        {
+            case 'a':
+                addIp();
+                break;
 
-    case 's':
-        //searchByMask();
-        break;
+            case 'l':
+                freeIpArray(ipArray, ipCount);
+                ipArray = readIp(&ipCount);
+                listIp(ipArray, ipCount);
+                break;
 
-    case 'd':
-        //deleteIp();
-        break;
-    }
+            case 's':
+                //searchByMask();
+                break;
+
+            case 'd':
+                //deleteIp();
+                break;
+        }
 
 
     }while (choice != 'q');
-    
+
+    freeIpArray(ipArray, ipCount);
+
+    return 0;
 }
