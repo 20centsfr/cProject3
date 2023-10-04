@@ -15,6 +15,27 @@ void clearInputBuffer() {
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
+int decimalToBinary(int n) {
+    if (n == 0)
+        return 0;
+
+    int binary[32];
+    int reverse;
+    int i = 0;
+
+    while (n > 0) {
+        binary[i] = n % 2;
+        n = n / 2;
+        i++;
+    }
+
+    for (int j = i - 3; j >= 0; j--) {
+        reverse *= 10;
+        reverse += binary[j];
+    }
+    return reverse;
+}
+
 int verifIp(char *ip){
 
     int a, b, c, d;
@@ -55,11 +76,53 @@ void addIp(){
     fclose(file);
 }
 
+void ipToBinary(int n) {
+    if (n == 0) {
+        printf("00000000");
+        return;
+    }
+
+    int binary[8] = {0};
+    int i = 7;
+
+    while (n > 0 && i >= 0) {
+        binary[i] = n % 2;
+        n = n / 2;
+        i--;
+    }
+
+    for (int j = 0; j < 8; j++) {
+        printf("%d", binary[j]);
+    }
+}
+
+
 void listIp(char **ipArray, int count){
 
-    for(int i = 0; i < count; i++){
-        printf("%d : %s\n", i + 1, ipArray[i]);
-    }
+    int choice;
+    unsigned int a, b, c, d;
+
+    for(int i = 0; i < count; i++)
+        printf("%d : %s\n",i + 1, ipArray[i]);
+
+    do{
+    printf("Selectionne une ip a consulter\n");
+    scanf("%d", &choice);
+    }while(choice > count || choice < 0);
+    clearInputBuffer();
+
+    sscanf(ipArray[choice - 1], "%d.%d.%d.%d", &a, &b, &c, &d);
+
+    printf("Ip : %s\n", ipArray[choice - 1]);
+    printf("Binaire : ");
+    ipToBinary(a);
+    printf(".");
+    ipToBinary(b);
+    printf(".");
+    ipToBinary(c);
+    printf(".");
+    ipToBinary(d);
+    printf("\nHexa : %02x.%02x.%02x.%02x\n", a, b, c, d);
 
 }
 
