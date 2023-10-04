@@ -2,6 +2,17 @@
 #include <stdio.h>
 #include <string.h>
 
+void clearInputBuffer();
+int verifIp(char *ip);
+void addIp();
+void listIp();
+int main(int argc, char** argv);
+
+void clearInputBuffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
 int verifIp(char *ip){
 
     int a, b, c, d;
@@ -41,6 +52,39 @@ void addIp(){
     fclose(file);
 }
 
+void listIp() {
+    FILE *file = fopen("ipList.txt", "r");
+    if (file == NULL) {
+        printf("Impossible d'ouvrir le fichier ipList.txt\n");
+        return;
+    }
+
+    char line[20];
+    int count = 0;
+
+    printf("Addresses found:\n");
+
+    while (fgets(line, sizeof(line), file) != NULL) {
+        size_t len = strlen(line);
+        if (len > 0 && line[len - 1] == '\n') {
+            line[len - 1] = '\0';
+        }
+
+        if (verifIp(line)) {
+            count++;
+            printf("%d- %s\n", count, line);
+        }
+    }
+
+    fclose(file);
+
+    if (count == 0) {
+        printf("No valid IP addresses found.\n");
+    } else {
+        printf("%d address%s found.\n", count, count > 1 ? "es" : "");
+    }
+}
+
 int main(int argc, char** argv){
     char choice;
 
@@ -56,7 +100,7 @@ int main(int argc, char** argv){
 
     printf("\n a - Add a new IP address\n l - List IP addresses\n s - Search similar by mask\n d - Delete an IP\n q - quit\n");
     choice = getchar();
-    fflush(stdin);
+    clearInputBuffer();
 
     switch (choice)
     {
@@ -65,7 +109,7 @@ int main(int argc, char** argv){
         break;
     
     case 'l':
-        //listIp();
+        listIp();
         break;
 
     case 's':
@@ -76,6 +120,7 @@ int main(int argc, char** argv){
         //deleteIp();
         break;
     }
+
 
     }while (choice != 'q');
     
