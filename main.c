@@ -34,7 +34,7 @@ void addIp(){
 
     char ip[20];
 
-    printf("Entrez un ip valide :\n");
+    printf("Entrez une ip valide :\n");
     scanf("%19s", ip);
     clearInputBuffer();
 
@@ -85,11 +85,16 @@ void listIp(char **ipArray, int count){
     for(int i = 0; i < count; i++)
         printf("%d : %s\n",i + 1, ipArray[i]);
 
+    printf("\n0 - cancel\n");
+
     do{
-    printf("Selectionne une ip a consulter\n");
+    printf("\nSelectionne une ip a consulter\n");
     scanf("%d", &choice);
     }while(choice > count || choice < 0);
     clearInputBuffer();
+
+    if(choice == 0)
+        return;
 
     sscanf(ipArray[choice - 1], "%d.%d.%d.%d", &a, &b, &c, &d);
 
