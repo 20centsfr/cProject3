@@ -11,6 +11,18 @@ char** readIp(int* count);
 void freeIpArray(char** ipArray, int ipCount);
 int main(int argc, char** argv);
 
+void inputString(char *string, int size) {
+    if (fgets(string, size, stdin) != NULL) {
+        if (string[strlen(string) - 1] == '\n') 
+            string[strlen(string) - 1] = '\0'; 
+        else 
+            clearInputBuffer(); // Nettoie le reste du tampon d'entrée
+    } else {
+        clearInputBuffer(); // Nettoie le tampon d'entrée en cas d'erreur
+    }
+}
+
+
 void clearInputBuffer() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
@@ -162,7 +174,7 @@ void freeIpArray(char** ipArray, int ipCount) {
 }
 
 int main(int argc, char** argv){
-    char choice;
+    char choice[5];
     char** ipArray = NULL;
     int ipCount = 0;
 
@@ -176,11 +188,21 @@ int main(int argc, char** argv){
         printf("#+#    #+#              #+#     #+# #+# #+#     #+# #+#       #+#    #+# #+#    #+# #+#    #+# #+#\n");
         printf(" ########               ###     ### ### ###     ### ########## ########   ########   ########  ##########\n");
 
-        printf("\n a - Add a new IP address\n l - List IP addresses\n s - Search similar by mask\n d - Delete an IP\n q - quit\n");
-        choice = getchar();
-        clearInputBuffer();
+        printf("\n a - Add a new IP address\n");
+        printf(" l - List all IP addresses\n");
+        printf(" s - Search IP addresses by mask\n");
+        printf(" d - Delete an IP address\n");
+        printf(" q - Quit\n");
+        printf ("Choix : ");
+        inputString(choice, sizeof(choice));
+        printf("%s", choice);
 
-        switch (choice)
+        while (strlen(choice) != 1 || (choice[0] != 'a' && choice[0] != 'l' && choice[0] != 's' && choice[0] != 'd' && choice[0] != 'q')) {
+            printf("\nChoix invalide, veuillez recommencer :");
+            inputString(choice, sizeof(choice));
+        }
+
+        switch (choice[0])
         {
             case 'a':
                 addIp();
@@ -202,7 +224,7 @@ int main(int argc, char** argv){
         }
 
 
-    }while (choice != 'q');
+    }while (choice[0] != 'q');
 
     freeIpArray(ipArray, ipCount);
 
