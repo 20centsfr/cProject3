@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+void inputString(char *string, int size);
 void clearInputBuffer();
 int verifIp(char *ip);
 void addIp();
@@ -11,6 +12,18 @@ char** readIp(int* count);
 void freeIpArray(char** ipArray, int ipCount);
 int main(int argc, char** argv);
 
+void inputString(char *string, int size) {
+    if (fgets(string, size, stdin) != NULL) {
+        if (string[strlen(string) - 1] == '\n') 
+            string[strlen(string) - 1] = '\0'; 
+        else 
+            clearInputBuffer(); // Nettoie le reste du tampon d'entrée
+    } else {
+        clearInputBuffer(); // Nettoie le tampon d'entrée en cas d'erreur
+    }
+}
+
+
 void clearInputBuffer() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
@@ -19,7 +32,7 @@ void clearInputBuffer() {
 int verifIp(char *ip){
 
     int a, b, c, d;
-    if (sscanf(ip, "%d.%d.%d.%d", &a, &b, &c, &d) == 4) {
+    if (sscanf(ip, "%d.%d.%d.%d", &a, &b, &c, &d) == 4) { 
         if (a >= 0 && a <= 255 &&
             b >= 0 && b <= 255 &&
             c >= 0 && c <= 255 &&
@@ -33,13 +46,14 @@ int verifIp(char *ip){
 void addIp(){
 
     char ip[20];
+    char userInput[20];
 
-    printf("Entrez une ip valide :\n");
-    scanf("%19s", ip);
+    printf("\nEntrez une ip valide : ");
+    scanf("%19s", userInput);
     clearInputBuffer();
 
-    if (!verifIp(ip)) {
-        printf("Adresse IP non valide : %s\n", ip);
+    if (!verifIp(userInput)) {
+        printf("\nAdresse IP non valide : %s\n", userInput);
         return;
     }
 
@@ -49,7 +63,17 @@ void addIp(){
         return;
     }
 
-    fprintf(file, "%s\n", ip);
+    if (fscanf(file, "%s", ip) != EOF) {
+        while (fscanf(file, "%s", ip) != EOF) {
+            if (strcmp(userInput, ip) == 0) {
+                printf("\n\nL'ADRESSE IP EXISTE DÉJÀ !\n\n\n");
+                fclose(file);
+                return;
+            }
+        }
+    }
+
+    fprintf(file, "%s\n", userInput);
 
     printf("\nL'ip a ete ajoute avec succes\n");
 
@@ -161,8 +185,72 @@ void freeIpArray(char** ipArray, int ipCount) {
     free(ipArray);
 }
 
+
+// Suppression d'une ip saisie par l'utilisateur dans le fichier
+
+void deleteIp() {
+    char ipToDelete[20];
+    char **ipArray = NULL;
+    int ipCount = 0;
+    int found = 0;
+
+    printf("Entrez l'adresse IP à supprimer : ");
+    inputString(ipToDelete, sizeof(ipToDelete));
+    
+
+    // Lire les adresses IP à partir du fichier
+    ipArray = readIp(&ipCount);
+
+    if (ipCount == 0) {
+        printf("\nLa liste des adresses IP est vide.\n\n");
+        freeIpArray(ipArray, ipCount);
+        return;
+    }
+
+
+    // Rechercher l'adresse IP à supprimer
+    for (int i = 0; i < ipCount; i++) {
+        if (strcmp(ipToDelete, ipArray[i]) == 0) {
+            found = 1;
+            // Libérer la mémoire de l'adresse IP à supprimer
+            free(ipArray[i]);
+            // Réduire le compteur des adresses IP
+            ipCount--;
+            // Décaler les adresses IP restantes
+            for (int j = i; j < ipCount; j++) {
+                ipArray[j] = ipArray[j + 1];
+            }
+            break;
+        }
+    }
+
+    if (found) {
+        // Écrire les adresses IP restantes dans le fichier
+        FILE *file = fopen("ipList.txt", "w");
+        if (file == NULL) {
+            printf("\nImpossible d'ouvrir le fichier ipList.txt pour la mise à jour.\n\n");
+            freeIpArray(ipArray, ipCount);
+            return;
+        }
+
+        for (int i = 0; i < ipCount; i++) {
+            fprintf(file, "%s\n", ipArray[i]);
+        }
+
+        fclose(file);
+        printf("\nL'adresse IP a été supprimée avec succès.\n\n");
+    } else {
+        printf("\nL'adresse IP spécifiée n'a pas été trouvée dans la liste.\n\n");
+    }
+
+    // Libérer la mémoire allouée pour le tableau d'adresses IP
+    freeIpArray(ipArray, ipCount);
+}
+
+
+
 int main(int argc, char** argv){
-    char choice;
+    char choice[5];
     char** ipArray = NULL;
     int ipCount = 0;
 
@@ -176,11 +264,21 @@ int main(int argc, char** argv){
         printf("#+#    #+#              #+#     #+# #+# #+#     #+# #+#       #+#    #+# #+#    #+# #+#    #+# #+#\n");
         printf(" ########               ###     ### ### ###     ### ########## ########   ########   ########  ##########\n");
 
-        printf("\n a - Add a new IP address\n l - List IP addresses\n s - Search similar by mask\n d - Delete an IP\n q - quit\n");
-        choice = getchar();
-        clearInputBuffer();
+        printf("\n a - Add a new IP address\n");
+        printf(" l - List all IP addresses\n");
+        printf(" s - Search IP addresses by mask\n");
+        printf(" d - Delete an IP address\n");
+        printf(" q - Quit\n");
+        printf ("Choix : ");
+        inputString(choice, sizeof(choice));
+        printf ("\n");
 
-        switch (choice)
+        while (strlen(choice) != 1 || choice[0] != 'a' && choice[0] != 'l' && choice[0] != 's' && choice[0] != 'd' && choice[0] != 'q') {
+            printf("\nChoix invalide, veuillez recommencer : ");
+            inputString(choice, sizeof(choice));
+        }
+
+        switch (choice[0])
         {
             case 'a':
                 addIp();
@@ -197,12 +295,13 @@ int main(int argc, char** argv){
                 break;
 
             case 'd':
-                //deleteIp();
+                freeIpArray(ipArray, ipCount);
+                deleteIp();
                 break;
         }
 
 
-    }while (choice != 'q');
+    }while (choice[0] != 'q');
 
     freeIpArray(ipArray, ipCount);
 
