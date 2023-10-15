@@ -94,23 +94,12 @@ void searchByMask(char **ipArray, int ipCount) {
     clearInputBuffer();
 
     // Assurez-vous que le masque est valide
-    if (mask < 0 || mask > 32) {
-        printf("Masque invalide. Entrez une valeur entre 0 et 32.\n");
+    if (mask < 8 || mask > 32) {
+        printf("Masque invalide. Entrez une valeur entre 8 et 32.\n");
         return;
     }
 
-    if (mask == 8) {
-        // Calcul de toutes les adresses possibles pour le masque 8
-        int a;
-        sscanf(networkIP, "%d", &a);
-        for (int i = 0; i < 256; i++) {
-            char *ip = (char *)malloc(20);
-            sprintf(ip, "%d.%d.%d.%d", a, i, 0, 0);
-            ipArrayByMask = (char **)realloc(ipArrayByMask, (i + 1) * sizeof(char *));
-            ipArrayByMask[i] = ip;
-            ++compteur;
-        }
-    } else if (mask == 24) {
+    if (mask == 24){
         // Calcul de toutes les adresses possibles pour le masque 24
         int a, b, c;
         sscanf(networkIP, "%d.%d.%d", &a, &b, &c);
@@ -121,7 +110,7 @@ void searchByMask(char **ipArray, int ipCount) {
             ipArrayByMask[i] = ip;
             ++compteur;
         }
-    } else {
+    } else if (mask == 16) {
         // Calcul de toutes les adresses possibles pour le masque 16
         int a, b;
         sscanf(networkIP, "%d.%d", &a, &b);
@@ -129,16 +118,39 @@ void searchByMask(char **ipArray, int ipCount) {
             for (int j = 0; j < 256; j++) {
                 char *ip = (char *)malloc(20);
                 sprintf(ip, "%d.%d.%d.%d", a, b, i, j);
-                ipArrayByMask = (char **)realloc(ipArrayByMask, (i * 256 + j + 1) * sizeof(char *));
-                ipArrayByMask[i * 256 + j] = ip;
+                ipArrayByMask = (char **)realloc(ipArrayByMask, (compteur + 1) * sizeof(char *));
+                ipArrayByMask[compteur] = ip;
                 ++compteur;
             }
         }
+    } else if (mask == 8) {
+        // Calcul de toutes les adresses possibles pour le masque 8
+        int a;
+        sscanf(networkIP, "%d", &a);
+        for (int i = 0; i < 256; i++) {
+            for (int j = 0; j < 256; j++) {
+                for (int k = 0; k < 256; k++) {
+                    char *ip = (char *)malloc(20);
+                    sprintf(ip, "%d.%d.%d.%d", a, i, j, k);
+                    ipArrayByMask = (char **)realloc(ipArrayByMask, (compteur + 1) * sizeof(char *));
+                    ipArrayByMask[compteur] = ip;
+                    ++compteur;
+                }
+            }
+        }
+    } else {
+        printf("Masque non pris en charge : %d\n", mask);
+        return;
     }
 
 
     // Récupération des IP dans le fichier
     ipArray = readIp(&ipCount);
+
+
+   /*for (int i = 0; i < compteur; i++) {
+        printf("%s\n", ipArrayByMask[i]);
+    }*/
 
     int trouve = 0;
     for (int i = 0; i < compteur; i++) {
@@ -157,11 +169,6 @@ void searchByMask(char **ipArray, int ipCount) {
     // Libérez la mémoire allouée pour ipArrayByMask
     for (int i = 0; i < 256; i++) {
         free(ipArrayByMask[i]);
-    }
-
-    // Libérer la mémoire allouée pour ip
-    for (int i = 0; i < ipCount; i++) {
-        free(ipArray[i]);
     }
 
     // Libérer la mémoire allouée pour le tableau d'adresses IP
