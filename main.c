@@ -45,6 +45,7 @@ int main(int argc, char** argv){
         switch (choice[0])
         {
             case 'a':
+                freeIpArray(ipArray, ipCount);
                 addIp();
                 break;
 
@@ -55,11 +56,11 @@ int main(int argc, char** argv){
                 break;
 
             case 's':
+                freeIpArray(ipArray, ipCount);
                 searchByMask(ipArray, ipCount);
                 break;
 
             case 'd':
-                freeIpArray(ipArray, ipCount);
                 deleteIp();
                 break;
         }
@@ -78,104 +79,73 @@ void searchByMask(char **ipArray, int ipCount) {
     int mask;
     int compteur = 0;
 
-    // Demandez à l'utilisateur d'entrer l'adresse IP du réseau
     printf("Entrez l'adresse IP : ");
     inputString(networkIP, sizeof(networkIP));
 
-    // Assurez-vous que l'adresse IP du réseau est valide
+    // Vérification de la validité de l'adresse IP
     if (!verifIp(networkIP)) {
         printf("Adresse IP du réseau non valide : %s\n", networkIP);
         return;
     }
 
-    // Demandez à l'utilisateur d'entrer le masque
     printf("Entrez le masque : ");
     scanf("%d", &mask);
     clearInputBuffer();
 
-    // Assurez-vous que le masque est valide
+    // Vérification de la validité du masque
     if (mask < 8 || mask > 32) {
         printf("Masque invalide. Entrez une valeur entre 8 et 32.\n");
         return;
     }
 
-    if (mask == 24){
-        // Calcul de toutes les adresses possibles pour le masque 24
-        int a, b, c;
-        sscanf(networkIP, "%d.%d.%d", &a, &b, &c);
-        for (int i = 0; i < 256; i++) {
-            char *ip = (char *)malloc(20);
-            sprintf(ip, "%d.%d.%d.%d", a, b, c, i);
-            ipArrayByMask = (char **)realloc(ipArrayByMask, (i + 1) * sizeof(char *));
-            ipArrayByMask[i] = ip;
-            ++compteur;
-        }
-    } else if (mask == 16) {
-        // Calcul de toutes les adresses possibles pour le masque 16
-        int a, b;
-        sscanf(networkIP, "%d.%d", &a, &b);
-        for (int i = 0; i < 256; i++) {
-            for (int j = 0; j < 256; j++) {
-                char *ip = (char *)malloc(20);
-                sprintf(ip, "%d.%d.%d.%d", a, b, i, j);
-                ipArrayByMask = (char **)realloc(ipArrayByMask, (compteur + 1) * sizeof(char *));
-                ipArrayByMask[compteur] = ip;
-                ++compteur;
-            }
-        }
-    } else if (mask == 8) {
-        // Calcul de toutes les adresses possibles pour le masque 8
-        int a;
-        sscanf(networkIP, "%d", &a);
-        for (int i = 0; i < 256; i++) {
-            for (int j = 0; j < 256; j++) {
-                for (int k = 0; k < 256; k++) {
-                    char *ip = (char *)malloc(20);
-                    sprintf(ip, "%d.%d.%d.%d", a, i, j, k);
-                    ipArrayByMask = (char **)realloc(ipArrayByMask, (compteur + 1) * sizeof(char *));
-                    ipArrayByMask[compteur] = ip;
-                    ++compteur;
-                }
-            }
-        }
-    } else {
-        printf("Masque non pris en charge : %d\n", mask);
-        return;
-    }
+    // Calcul du nombre d'adresses possibles
+    int numAddresses = 1 << (32 - mask); // Équivalent à 2^(32 - mask)
 
+    for (int i = 0; i < numAddresses; i++) {
+        char *ip = (char *)malloc(20);
+        int a, b, c, d;
+        sscanf(networkIP, "%d.%d.%d.%d", &a, &b, &c, &d);
+        d += i;
+        c += d / 256;
+        d %= 256;
+        b += c / 256;
+        c %= 256;
+        a += b / 256;
+        b %= 256;
+
+        snprintf(ip, 20, "%d.%d.%d.%d", a, b, c, d);
+
+        ipArrayByMask = (char **)realloc(ipArrayByMask, (compteur + 1) * sizeof(char *));
+        ipArrayByMask[compteur] = ip;
+        ++compteur;
+    }
 
     // Récupération des IP dans le fichier
     ipArray = readIp(&ipCount);
-
-
-   /*for (int i = 0; i < compteur; i++) {
-        printf("%s\n", ipArrayByMask[i]);
-    }*/
 
     int trouve = 0;
     for (int i = 0; i < compteur; i++) {
         for (int j = 0; j < ipCount; j++) {
             if (strcmp(ipArrayByMask[i], ipArray[j]) == 0) {
-                printf("Adresse IP TROUVÉE : %s\n", ipArrayByMask[i]);
+                printf("Adresse IP trouvée : %s\n", ipArrayByMask[i]);
                 trouve = 1;
             }
         }
     }
+    printf ("\n\n");
 
     if (!trouve) {
-        printf("Aucune adresse IP n'a été trouvée pour le réseau %s/%d\n", networkIP, mask);
+        printf("\nAucune adresse IP n'a été trouvée pour le réseau %s/%d\n\n", networkIP, mask);
     }
 
     // Libérez la mémoire allouée pour ipArrayByMask
-    for (int i = 0; i < 256; i++) {
+    for (int i = 0; i < numAddresses; i++) {
         free(ipArrayByMask[i]);
     }
 
     // Libérer la mémoire allouée pour le tableau d'adresses IP
     freeIpArray(ipArray, ipCount);
 }
-
-
 
 void inputString(char *string, int size) {
     if (fgets(string, size, stdin) != NULL) {
@@ -187,7 +157,6 @@ void inputString(char *string, int size) {
         clearInputBuffer(); // Nettoie le tampon d'entrée en cas d'erreur
     }
 }
-
 
 void clearInputBuffer() {
     int c;
@@ -224,7 +193,7 @@ void addIp(){
 
     FILE *file = fopen("ipList.txt", "a+");
     if (file == NULL) {
-        printf("Impossible d'ouvrir/creer le fichier ipList.txt");
+        printf("\nImpossible d'ouvrir/creer le fichier ipList.txt\n\n");
         return;
     }
 
@@ -240,7 +209,7 @@ void addIp(){
 
     fprintf(file, "%s\n", userInput);
 
-    printf("\nL'ip a été ajoutée avec succès\n\n");
+    printf("\nL'ip a été ajoutée avec succès !\n\n");
 
     fclose(file);
 }
@@ -265,7 +234,6 @@ void ipToBinary(int n) {
     }
 }
 
-
 void listIp(char **ipArray, int count){
 
     int choice;
@@ -274,10 +242,10 @@ void listIp(char **ipArray, int count){
     for(int i = 0; i < count; i++)
         printf("%d : %s\n",i + 1, ipArray[i]);
 
-    printf("\n0 - cancel\n");
+    printf("\n0 - Cancel\n");
 
     do{
-    printf("\nSelectionne une ip a consulter\n");
+    printf("\nSelectionnez une ip à consulter : ");
     scanf("%d", &choice);
     }while(choice > count || choice < 0);
     clearInputBuffer();
@@ -287,7 +255,7 @@ void listIp(char **ipArray, int count){
 
     sscanf(ipArray[choice - 1], "%d.%d.%d.%d", &a, &b, &c, &d);
 
-    printf("Ip : %s\n", ipArray[choice - 1]);
+    printf("IP : %s\n", ipArray[choice - 1]);
     printf("Binaire : ");
     ipToBinary(a);
     printf(".");
@@ -339,9 +307,9 @@ char** readIp(int *count) {
     fclose(file);
 
     *count = ipCount;
+
     return ipArray;
 }
-
 
 void freeIpArray(char** ipArray, int ipCount) {
     for (int i = 0; i < ipCount; i++) {
@@ -349,7 +317,6 @@ void freeIpArray(char** ipArray, int ipCount) {
     }
     free(ipArray);
 }
-
 
 void deleteIp() {
     char ipToDelete[20];
