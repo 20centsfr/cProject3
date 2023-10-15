@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+void inputString(char *string, int size);
 void clearInputBuffer();
 int verifIp(char *ip);
 void addIp();
@@ -31,7 +32,7 @@ void clearInputBuffer() {
 int verifIp(char *ip){
 
     int a, b, c, d;
-    if (sscanf(ip, "%d.%d.%d.%d", &a, &b, &c, &d) == 4) {
+    if (sscanf(ip, "%d.%d.%d.%d", &a, &b, &c, &d) == 4) { 
         if (a >= 0 && a <= 255 &&
             b >= 0 && b <= 255 &&
             c >= 0 && c <= 255 &&
@@ -45,13 +46,14 @@ int verifIp(char *ip){
 void addIp(){
 
     char ip[20];
+    char userInput[20];
 
-    printf("Entrez une ip valide :\n");
-    scanf("%19s", ip);
+    printf("\nEntrez une ip valide : ");
+    scanf("%19s", userInput);
     clearInputBuffer();
 
-    if (!verifIp(ip)) {
-        printf("Adresse IP non valide : %s\n", ip);
+    if (!verifIp(userInput)) {
+        printf("\nAdresse IP non valide : %s\n", userInput);
         return;
     }
 
@@ -61,7 +63,17 @@ void addIp(){
         return;
     }
 
-    fprintf(file, "%s\n", ip);
+    if (fscanf(file, "%s", ip) != EOF) {
+        while (fscanf(file, "%s", ip) != EOF) {
+            if (strcmp(userInput, ip) == 0) {
+                printf("\n\nL'ADRESSE IP EXISTE DÉJÀ !\n\n\n");
+                fclose(file);
+                return;
+            }
+        }
+    }
+
+    fprintf(file, "%s\n", userInput);
 
     printf("\nL'ip a ete ajoute avec succes\n");
 
@@ -197,8 +209,8 @@ int main(int argc, char** argv){
         inputString(choice, sizeof(choice));
         printf("%s", choice);
 
-        while (strlen(choice) != 1 || (choice[0] != 'a' && choice[0] != 'l' && choice[0] != 's' && choice[0] != 'd' && choice[0] != 'q')) {
-            printf("\nChoix invalide, veuillez recommencer :");
+        while (strlen(choice) != 1 || choice[0] != 'a' && choice[0] != 'l' && choice[0] != 's' && choice[0] != 'd' && choice[0] != 'q') {
+            printf("\nChoix invalide, veuillez recommencer : ");
             inputString(choice, sizeof(choice));
         }
 
