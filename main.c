@@ -158,7 +158,11 @@ void searchByMask(char **ipArray, int ipCount) {
     for (int i = 0; i < 256; i++) {
         free(ipArrayByMask[i]);
     }
-    free(ipArrayByMask);
+
+    // Libérer la mémoire allouée pour ip
+    for (int i = 0; i < ipCount; i++) {
+        free(ipArray[i]);
+    }
 
     // Libérer la mémoire allouée pour le tableau d'adresses IP
     freeIpArray(ipArray, ipCount);
