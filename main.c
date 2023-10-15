@@ -185,6 +185,70 @@ void freeIpArray(char** ipArray, int ipCount) {
     free(ipArray);
 }
 
+
+// Suppression d'une ip saisie par l'utilisateur dans le fichier
+
+void deleteIp() {
+    char ipToDelete[20];
+    char **ipArray = NULL;
+    int ipCount = 0;
+    int found = 0;
+
+    printf("Entrez l'adresse IP à supprimer : ");
+    inputString(ipToDelete, sizeof(ipToDelete));
+    
+
+    // Lire les adresses IP à partir du fichier
+    ipArray = readIp(&ipCount);
+
+    if (ipCount == 0) {
+        printf("\nLa liste des adresses IP est vide.\n\n");
+        freeIpArray(ipArray, ipCount);
+        return;
+    }
+
+
+    // Rechercher l'adresse IP à supprimer
+    for (int i = 0; i < ipCount; i++) {
+        if (strcmp(ipToDelete, ipArray[i]) == 0) {
+            found = 1;
+            // Libérer la mémoire de l'adresse IP à supprimer
+            free(ipArray[i]);
+            // Réduire le compteur des adresses IP
+            ipCount--;
+            // Décaler les adresses IP restantes
+            for (int j = i; j < ipCount; j++) {
+                ipArray[j] = ipArray[j + 1];
+            }
+            break;
+        }
+    }
+
+    if (found) {
+        // Écrire les adresses IP restantes dans le fichier
+        FILE *file = fopen("ipList.txt", "w");
+        if (file == NULL) {
+            printf("\nImpossible d'ouvrir le fichier ipList.txt pour la mise à jour.\n\n");
+            freeIpArray(ipArray, ipCount);
+            return;
+        }
+
+        for (int i = 0; i < ipCount; i++) {
+            fprintf(file, "%s\n", ipArray[i]);
+        }
+
+        fclose(file);
+        printf("\nL'adresse IP a été supprimée avec succès.\n\n");
+    } else {
+        printf("\nL'adresse IP spécifiée n'a pas été trouvée dans la liste.\n\n");
+    }
+
+    // Libérer la mémoire allouée pour le tableau d'adresses IP
+    freeIpArray(ipArray, ipCount);
+}
+
+
+
 int main(int argc, char** argv){
     char choice[5];
     char** ipArray = NULL;
@@ -207,7 +271,7 @@ int main(int argc, char** argv){
         printf(" q - Quit\n");
         printf ("Choix : ");
         inputString(choice, sizeof(choice));
-        printf("%s", choice);
+        printf ("\n");
 
         while (strlen(choice) != 1 || choice[0] != 'a' && choice[0] != 'l' && choice[0] != 's' && choice[0] != 'd' && choice[0] != 'q') {
             printf("\nChoix invalide, veuillez recommencer : ");
@@ -231,7 +295,8 @@ int main(int argc, char** argv){
                 break;
 
             case 'd':
-                //deleteIp();
+                freeIpArray(ipArray, ipCount);
+                deleteIp();
                 break;
         }
 
